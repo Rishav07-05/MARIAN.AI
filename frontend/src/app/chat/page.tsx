@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { ChatWindow } from '@/components/chat/ChatWindow';
+import { AuthModal } from '@/components/AuthModal';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -14,6 +15,10 @@ export default function ChatPage() {
     activeMessages,
     selectedModelId,
     isStreaming,
+    guestMessageCount,
+    maxGuestMessages,
+    showAuthModal,
+    setShowAuthModal,
     setSelectedModelId,
     setActiveConversationId,
     createNewChat,
@@ -27,7 +32,7 @@ export default function ChatPage() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0B0B0C]">
+    <div className="flex h-screen overflow-hidden bg-[#0B0B0C] relative">
       {/* Sidebar (Desktop + Mobile Drawer) */}
       <Sidebar
         conversations={conversations}
@@ -40,6 +45,8 @@ export default function ChatPage() {
         onLogout={logout}
         isOpenMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
+        guestMessageCount={guestMessageCount}
+        maxGuestMessages={maxGuestMessages}
       />
 
       {/* Main Chat Workspace */}
@@ -52,6 +59,14 @@ export default function ChatPage() {
         isStreaming={isStreaming}
         onStopGeneration={stopGeneration}
         onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
+      />
+
+      {/* Paywall Auth Modal for Guest Trial (5 Messages Max) */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        guestMessageCount={guestMessageCount}
+        maxGuestMessages={maxGuestMessages}
       />
     </div>
   );

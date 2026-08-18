@@ -129,6 +129,83 @@ This guarantees minimal latency and rock-solid memory stability during peak requ
   ],
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isValidUuid(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
+export async function fetchConversationsApi(): Promise<Conversation[]> {
+  try {
+    const res = await apiFetch<{ items: Array<{ id: string; title: string; created_at: string; updated_at: string }> }>('/conversations');
+    return res.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      isPinned: false,
+      model: 'marian-3-omni',
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchMessagesApi(conversationId: string): Promise<Message[]> {
+  if (!isValidUuid(conversationId)) return [];
+  try {
+    const res = await apiFetch<{ items: Array<{ id: string; conversation_id: string; role: 'user' | 'assistant'; content: string; created_at: string; model?: string }> }>(
+      `/conversations/${conversationId}/messages`
+    );
+    return res.items.map((m) => ({
+      id: m.id,
+      conversationId: m.conversation_id,
+      role: m.role,
+      content: m.content,
+      timestamp: m.created_at,
+      status: 'complete',
+      modelUsed: m.model || 'MARIAN 3 Omni',
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function deleteConversationApi(conversationId: string): Promise<void> {
+  if (!isValidUuid(conversationId)) return;
+  try {
+    await apiFetch(`/conversations/${conversationId}`, { method: 'DELETE' });
+  } catch {
+    // Graceful silent handling
+  }
+}
+
+export async function migrateGuestHistoryApi(guestData: {
+  conversations: Conversation[];
+  messagesMap: Record<string, Message[]>;
+}): Promise<void> {
+  try {
+    const payloadConvs = guestData.conversations.map((c) => ({
+      title: c.title,
+      messages: (guestData.messagesMap[c.id] || []).map((m) => ({
+        role: m.role,
+        content: m.content,
+        model: m.modelUsed || 'MARIAN 3 Omni',
+      })),
+    }));
+
+    if (payloadConvs.length === 0) return;
+
+    await apiFetch('/conversations/migrate_guest', {
+      method: 'POST',
+      body: JSON.stringify({ conversations: payloadConvs }),
+    });
+  } catch {
+    // Graceful silent handling
+  }
+}
+
+
 /**
  * Sends a message and triggers real-time token streaming.
  */
@@ -139,7 +216,8 @@ export async function sendChatMessage(
   onChunk: (delta: string) => void,
   onComplete: (fullText: string) => void,
   onError: (err: Error) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onConversationId?: (id: string) => void
 ): Promise<void> {
   const isStreamingEnabled = process.env.NEXT_PUBLIC_ENABLE_STREAMING !== 'false';
 
@@ -149,7 +227,11 @@ export async function sendChatMessage(
     try {
       await streamSseResponse(
         '/chat',
-        { conversationId, prompt, model: modelId },
+        {
+          conversation_id: isValidUuid(conversationId) ? conversationId : null,
+          prompt,
+          model: modelId,
+        },
         (delta) => {
           accumulatedText += delta;
           onChunk(delta);
@@ -159,7 +241,8 @@ export async function sendChatMessage(
           // If backend connection fails in dev/preview, fallback to simulated streaming generator
           simulateStreamingResponse(prompt, onChunk, onComplete, signal);
         },
-        signal
+        signal,
+        onConversationId
       );
     } catch {
       simulateStreamingResponse(prompt, onChunk, onComplete, signal);

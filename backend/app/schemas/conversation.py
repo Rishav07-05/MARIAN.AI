@@ -49,3 +49,25 @@ class PaginatedMessages(BaseModel):
     offset: int
     total: int
     has_next: bool
+
+
+class GuestMessageInput(BaseModel):
+    role: str
+    content: str
+    model: Optional[str] = "MARIAN 3 Omni"
+
+
+class GuestConversationInput(BaseModel):
+    id: Optional[str] = None
+    title: Optional[str] = "Guest Conversation"
+    messages: List[GuestMessageInput] = []
+
+
+class GuestMigrationRequest(BaseModel):
+    conversations: List[GuestConversationInput] = []
+
+
+class GuestMigrationResponse(BaseModel):
+    migrated_count: int
+    conversation_ids: List[str]
+

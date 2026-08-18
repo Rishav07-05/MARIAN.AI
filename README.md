@@ -1,38 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MARIAN.AI — Production AI Platform
 
-## Getting Started
+MARIAN.AI is an AI assistant platform built with a modern Next.js 16 App Router frontend and a Python FastAPI backend.
 
-First, run the development server:
+## Workspace Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+MARIAN-AI/
+├── frontend/             # Next.js 16 App Router (TypeScript + Tailwind CSS)
+│   ├── src/             # App components, pages, hooks, services
+│   ├── public/          # Static assets & brand media
+│   ├── package.json     # Node dependencies
+│   └── .env.local       # Frontend environment variables
+│
+├── backend/              # Python FastAPI Clean Architecture
+│   ├── app/             # API routes, services, repositories, DB models
+│   ├── tests/           # Pytest unit, integration, and security test suites
+│   ├── Dockerfile       # Production non-root backend container
+│   ├── docker-compose.yml # Postgres 16 & Redis 7 stack
+│   ├── requirements.txt # Python dependencies
+│   └── .env             # Backend environment variables
+│
+└── package.json         # Workspace root execution scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Quick Start Guide
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Launch Backend Services & Database
+```bash
+# Start PostgreSQL 16 & Redis 7
+cd backend
+docker compose up -d postgres redis
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Launch FastAPI Server
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-## Learn More
+### 2. Launch Next.js Frontend
+```bash
+npm run dev:frontend
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# MARIAN.AI
-# MARIAN.AI
+### 3. Run Backend Verification Tests
+```bash
+npm run test:backend
+```

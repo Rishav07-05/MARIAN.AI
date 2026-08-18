@@ -39,10 +39,17 @@ class LLMService:
             token_count=len(request.prompt.split()),
         )
 
-        # 3. Stream generator wrapper that accumulates response & persists assistant message
+        # 3. Fetch conversation history for multi-turn context memory
+        past_messages, _ = await msg_repo.list_messages_for_conversation(conv.id, limit=30)
+        history = [
+            {"role": msg.role, "content": msg.content}
+            for msg in past_messages
+        ]
+
+        # 4. Stream generator wrapper that accumulates response & persists assistant message
         async def stream_wrapper() -> AsyncGenerator[str, None]:
             full_response = []
-            async for chunk_str in self.client.generate_stream(request.prompt, request.model):
+            async for chunk_str in self.client.generate_stream(request.prompt, request.model, history=history):
                 yield chunk_str
                 # Parse delta content to accumulate full message
                 if chunk_str.startswith("data: "):

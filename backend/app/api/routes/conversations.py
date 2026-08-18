@@ -13,6 +13,8 @@ from app.schemas.conversation import (
     ConversationCreate,
     ConversationDetailRead,
     ConversationRead,
+    GuestMigrationRequest,
+    GuestMigrationResponse,
     PaginatedConversations,
     PaginatedMessages,
 )
@@ -116,3 +118,35 @@ async def list_messages(
         total=total,
         has_next=(offset + limit) < total,
     )
+
+
+@router.post("/migrate_guest", response_model=GuestMigrationResponse, status_code=status.HTTP_200_OK)
+async def migrate_guest_conversations(
+    payload: GuestMigrationRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Migrate guest trial conversations and messages into current user account."""
+    conv_repo = ConversationRepository(db)
+    msg_repo = MessageRepository(db)
+    migrated_ids = []
+
+    for item in payload.conversations:
+        if not item.messages:
+            continue
+        conv = await conv_repo.create(user_id=current_user.id, title=item.title or "Guest Conversation")
+        migrated_ids.append(str(conv.id))
+        for msg in item.messages:
+            await msg_repo.create_message(
+                conversation_id=conv.id,
+                role=msg.role,
+                content=msg.content,
+                model=msg.model or "MARIAN 3 Omni",
+                token_count=len(msg.content.split()),
+            )
+
+    return GuestMigrationResponse(
+        migrated_count=len(migrated_ids),
+        conversation_ids=migrated_ids,
+    )
+

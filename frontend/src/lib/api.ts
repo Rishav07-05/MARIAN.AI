@@ -19,6 +19,26 @@ export class ApiError extends Error {
 }
 
 /**
+ * Helper to dynamically extract Clerk JWT session token or local storage fallback.
+ */
+export async function getAuthToken(): Promise<string> {
+  if (typeof window !== 'undefined') {
+    try {
+      const clerkSession = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string | null> } } }).Clerk?.session;
+      if (clerkSession) {
+        const token = await clerkSession.getToken();
+        if (token) return token;
+      }
+    } catch {
+      // Fallback if Clerk token retrieval fails
+    }
+    const localToken = localStorage.getItem('marian_auth_token');
+    if (localToken) return localToken;
+  }
+  return 'mock_token_user_clerk_a';
+}
+
+/**
  * Standard fetch helper with client-side defensive error masking.
  */
 export async function apiFetch<T>(
@@ -26,18 +46,13 @@ export async function apiFetch<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const token = await getAuthToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
     ...(options.headers as Record<string, string>),
   };
-
-  // Client token retrieval with dev fallback
-  const token = typeof window !== 'undefined'
-    ? localStorage.getItem('marian_auth_token') || 'mock_token_user_clerk_a'
-    : 'mock_token_user_clerk_a';
-  
-  headers['Authorization'] = `Bearer ${token}`;
 
   try {
     const response = await fetch(url, {
@@ -81,12 +96,11 @@ export async function streamSseResponse(
   onChunk: (delta: string) => void,
   onComplete: () => void,
   onError: (err: Error) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onConversationId?: (id: string) => void
 ): Promise<void> {
   const url = `${BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-  const token = typeof window !== 'undefined'
-    ? localStorage.getItem('marian_auth_token') || 'mock_token_user_clerk_a'
-    : 'mock_token_user_clerk_a';
+  const token = await getAuthToken();
 
   try {
     const response = await fetch(url, {
@@ -101,6 +115,11 @@ export async function streamSseResponse(
 
     if (!response.ok) {
       throw new ApiError('Failed to initiate response stream from MARIAN model.', response.status);
+    }
+
+    const headerConvId = response.headers.get('x-conversation-id') || response.headers.get('X-Conversation-ID');
+    if (headerConvId && onConversationId) {
+      onConversationId(headerConvId);
     }
 
     if (!response.body) {

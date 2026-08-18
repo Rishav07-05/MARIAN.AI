@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -72,10 +72,18 @@ class Settings(BaseSettings):
         description="Fernet 32-byte Base64 Encryption Key for OAuth tokens",
     )
 
-    # MARIAN Inference Model Engine
+    # MARIAN Inference Model Engine / Gemini API
     MARIAN_MODEL_URL: str = Field(
         default="http://localhost:8001",
         description="MARIAN Language Model Inference Server URL",
+    )
+    GEMINI_API_KEY: Optional[SecretStr] = Field(
+        default=None,
+        description="Google Gemini API Key for model inference",
+    )
+    GEMINI_MODEL: str = Field(
+        default="gemini-3.6-flash",
+        description="Google Gemini Model Name",
     )
     MAX_PROMPT_TOKENS: int = 8192
     MAX_RESPONSE_TOKENS: int = 4096
