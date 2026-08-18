@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useUser, UserButton } from '@clerk/nextjs';
 import { MarianLogo } from '@/components/ui/MarianLogo';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -19,6 +20,7 @@ import {
   Sun,
   Laptop,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +46,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
   onConnectCalendar,
   onDisconnectCalendar,
 }) => {
+  const { user: clerkUser } = useUser();
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('dark');
   const [responseStyle, setResponseStyle] = useState('concise');
@@ -120,13 +123,49 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             {/* Account Tab */}
             {activeTab === 'account' && (
               <div className="rounded-xl bg-[#121214] border border-white/10 p-6 space-y-6 shadow-xl">
-                <div className="border-b border-white/10 pb-4">
-                  <h2 className="text-lg font-semibold text-[#F5F5F0]">Account Settings</h2>
-                  <p className="text-xs text-[#A1A1AA]">Manage your user profile and workspace credentials.</p>
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[#F5F5F0]">Account Settings</h2>
+                    <p className="text-xs text-[#A1A1AA]">Manage your user profile and Clerk identity.</p>
+                  </div>
+                  <Link
+                    href="/user-profile"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F4F6A6] text-[#0B0B0C] text-xs font-semibold hover:bg-[#D4D686] transition"
+                  >
+                    <span>Clerk User Profile</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
+
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#18181B] border border-white/10">
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        userButtonAvatarBox: 'w-12 h-12 border border-[#F4F6A6]/40 shadow-lg',
+                      },
+                    }}
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-[#F5F5F0]">
+                      {clerkUser?.fullName || clerkUser?.username || 'Authenticated User'}
+                    </p>
+                    <p className="text-xs text-[#A1A1AA]">
+                      {clerkUser?.primaryEmailAddress?.emailAddress || 'clerk@marian.ai'}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input label="Full Name" defaultValue="Alex Vance" />
-                  <Input label="Email Address" defaultValue="alex@marian.ai" disabled />
+                  <Input
+                    label="Full Name"
+                    value={clerkUser?.fullName || clerkUser?.firstName || 'Alex Vance'}
+                    disabled
+                  />
+                  <Input
+                    label="Email Address"
+                    value={clerkUser?.primaryEmailAddress?.emailAddress || 'alex@marian.ai'}
+                    disabled
+                  />
                 </div>
                 <div className="space-y-2">
                   <span className="block text-xs font-medium text-[#A1A1AA]">Subscription Tier</span>
