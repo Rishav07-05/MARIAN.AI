@@ -31,3 +31,6 @@ htmlcov/
 .DS_Store
 .vscode/
 .idea/
+
+# RAG generated data
+data/vector_db/
