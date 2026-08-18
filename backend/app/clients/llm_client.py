@@ -24,7 +24,7 @@ class MARIANLLMClient:
         gemini_key = settings.GEMINI_API_KEY.get_secret_value() if settings.GEMINI_API_KEY else None
 
         # 1. Try Google Gemini API if key is present and valid
-        if gemini_key and gemini_key.startswith("AIza"):
+        if gemini_key:
             try:
                 async for chunk in self._generate_gemini_stream(prompt, gemini_key, history):
                     yield chunk

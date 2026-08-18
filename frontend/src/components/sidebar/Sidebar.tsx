@@ -7,6 +7,7 @@ import { ChatHistory } from './ChatHistory';
 import { Conversation } from '@/types/chat';
 import { UserProfile } from '@/types/user';
 import {
+  User,
   Plus,
   Search,
   Settings,
@@ -176,7 +177,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 },
               }}
             />
-            <div className="flex items-center gap-1">
+              <Link
+                href="/user-profile"
+                className="text-[#A1A1AA] hover:text-[#F4F6A6] p-1.5 rounded-lg hover:bg-[#18181B] transition-colors"
+                title="Clerk User Profile"
+              >
+                <User className="w-4 h-4" />
+              </Link>
               <Link
                 href="/settings"
                 className="text-[#A1A1AA] hover:text-[#F5F5F0] p-1.5 rounded-lg hover:bg-[#18181B] transition-colors"
@@ -192,7 +199,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <HelpCircle className="w-4 h-4" />
               </Link>
             </div>
-          </div>
         ) : (
           <div className="flex items-center gap-2">
             <SignInButton mode="modal">

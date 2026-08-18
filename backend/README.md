@@ -60,4 +60,5 @@ docker-compose up -d --build
 ```bash
 python3 -m pytest
 python3 -m ruff check .
+    
 ```
