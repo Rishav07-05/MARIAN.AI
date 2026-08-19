@@ -5,8 +5,8 @@
   "description": "MARIAN.AI — Fullstack Modular Workspace",
   "scripts": {
     "dev:frontend": "npm --prefix frontend run dev",
-    "dev:backend": "cd backend && venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
-    "test:backend": "cd backend && PYTHONPATH=. venv/bin/pytest",
-    "lint:backend": "cd backend && venv/bin/ruff check ."
+    "dev:backend": "cd $(git rev-parse --show-toplevel 2>/dev/null || echo .)/backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "test:backend": "cd $(git rev-parse --show-toplevel 2>/dev/null || echo .)/backend && PYTHONPATH=. pytest",
+    "lint:backend": "cd $(git rev-parse --show-toplevel 2>/dev/null || echo .)/backend && ruff check ."
   }
 }

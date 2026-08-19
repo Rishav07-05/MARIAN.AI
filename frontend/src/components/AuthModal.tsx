@@ -52,7 +52,7 @@ export function AuthModal({ isOpen, onClose, guestMessageCount, maxGuestMessages
             </div>
             <ul className="text-xs text-gray-300 space-y-1 list-disc list-inside pl-1">
               <li>All your <span className="text-white font-medium">{guestMessageCount} guest messages</span> will be saved to your account.</li>
-              <li>Unlimited access to MARIAN 3 Omni & Gemini model pipelines.</li>
+              <li>Unlimited access to MARIAN 3 Omni local model pipeline.</li>
               <li>Persistent chat history across all your devices.</li>
             </ul>
           </div>

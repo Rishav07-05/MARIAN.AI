@@ -72,18 +72,15 @@ class Settings(BaseSettings):
         description="Fernet 32-byte Base64 Encryption Key for OAuth tokens",
     )
 
-    # MARIAN Inference Model Engine / Gemini API
+    # MARIAN Local Inference Model Engine
     MARIAN_MODEL_URL: str = Field(
         default="http://localhost:8001",
-        description="MARIAN Language Model Inference Server URL",
+        description="MARIAN Language Model Inference Server URL (Ollama, vLLM, LMStudio, or custom local server)",
+        alias="MARIAN_MODEL_URL",
     )
-    GEMINI_API_KEY: Optional[SecretStr] = Field(
-        default=None,
-        description="Google Gemini API Key for model inference",
-    )
-    GEMINI_MODEL: str = Field(
-        default="gemini-3.6-flash",
-        description="Google Gemini Model Name",
+    MARIAN_MODEL_NAME: str = Field(
+        default="MARIAN 3 Omni",
+        description="Default local model identifier",
     )
     MAX_PROMPT_TOKENS: int = 8192
     MAX_RESPONSE_TOKENS: int = 4096
